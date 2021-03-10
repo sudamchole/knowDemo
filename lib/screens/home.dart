@@ -22,6 +22,7 @@ class _HomeState extends State<Home> {
 
   bool _isSearch = true;
   String _searchText = "";
+   bool sortFlag=false;
 
   // Fetch content from the json file
   Future<void> readJson() async {
@@ -76,23 +77,44 @@ class _HomeState extends State<Home> {
                 Row(
                   children: <Widget>[
                     Flexible(child: _searchBox()),
-                    Image(
-                      image: AssetImage("assets/ic_sort.png"),
-                      width: 30,
-                      height: 30,
+                    GestureDetector(
+                      onTap: (){
+                        if(sortFlag==false){
+                          sortFlag=true;
 
+                            _items.sort((a, b) => a.toString().compareTo(b.toString()));
+                          setState(() {
+
+                          });
+
+                        }else{
+                          sortFlag=false;
+                          _items.sort((a, b) => b.toString().compareTo(a.toString()));
+                          setState(() {
+
+                          });
+                        }
+
+
+                      },
+                      child: Image(
+                        image: AssetImage("assets/ic_sort.png"),
+                        width: 30,
+                        height: 30,
+
+                      ),
                     ),
                   ],
                 ),
                 // Display the data loaded from sample.json
-                _isSearch ?Expanded(
+               _items!=null? _isSearch ?Expanded(
                         child: ListView.builder(
                           itemCount: _items.length,
                           itemBuilder: (context, index) {
                             return _showUserListItem(index);
                           },
                         ),
-                      ): _searchListView()
+                      ): _searchListView():Container()
 
               ],
             ),

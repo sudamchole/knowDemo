@@ -122,8 +122,6 @@ class _LoginState extends State<Login> {
         validator: (value) {
           if (value.isEmpty) {
             return "Password should not be empty";
-          } else if (value.length < 8) {
-            return "Password should have more than 8 characters";
           }
           return null;
         },
@@ -167,7 +165,7 @@ class _LoginState extends State<Login> {
     if (form.validate()) {
       form.save();
       if (userNameController.text == "username" &&
-        passwordController.text == "password!23") {
+        passwordController.text == "password") {
         setIsLogin();
         Navigator.of(context)
           .pushNamedAndRemoveUntil('/home', (Route<dynamic> route) => false);
