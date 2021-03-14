@@ -132,16 +132,7 @@ class _HomeState extends State<Home> {
         Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => EmpDetails(
-                    id: _items[index].id,
-                    fName: _items[index].firstName,
-                    lName: _items[index].lastName,
-                    email: _items[index].email,
-                    contactNumber: _items[index].contactNumber,
-                    age: _items[index].age.toString(),
-                    salary: _items[index].salary.toString(),
-                    address: _items[index].address,
-                  )),
+              builder: (context) => EmpDetails(index:_items[index])),
         );
       },
       child: ListTile(
