@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:typed_data';
+import 'package:drevolapp/model/employeeModel.dart';
+import 'package:drevolapp/screens/empDetails.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:alphabet_list_scroll_view/alphabet_list_scroll_view.dart';
+import 'package:toast/toast.dart';
 
 class Home extends StatefulWidget {
   @override
@@ -13,23 +15,34 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   final appTitle = 'Home';
 
-  List _items;
-
-  List visitedList;
-  List favList;
-  List _searchListItems;
-  var _searchEdit = new TextEditingController();
-
-  bool _isSearch = true;
-  String _searchText = "";
-   bool sortFlag=false;
+  List<EmployeeModel> _items;
+  List<String> strList = [];
 
   // Fetch content from the json file
+  EmployeeModel employeeModel;
+ // static const _pageSize = 50;
+
   Future<void> readJson() async {
-    final String response = await rootBundle.loadString('assets/users.json');
-    final data = await json.decode(response);
+    final String response =
+        await rootBundle.loadString('assets/employees.json');
+    //  final data  = await json.decode(response);
+    //assuming this json returns an array of signupresponse objects
+    final List parsedList = json.decode(response);
+
     setState(() {
-      _items = data["users"];
+      _items = parsedList.map((val) => EmployeeModel.fromJson(val)).toList();
+
+      print(_items.length);
+
+      // add first 50 records
+  /*    for (int i = 0; i < _pageSize; i++) {
+        strList.add(_items[i].firstName);
+      }*/
+      for (int i = 0; i < _items.length; i++) {
+        strList.add(_items[i].firstName);
+      }
+      _items.sort((a, b) =>
+          a.firstName.toLowerCase().compareTo(b.firstName.toLowerCase()));
     });
   }
 
@@ -40,307 +53,119 @@ class _HomeState extends State<Home> {
       readJson();
     });
   }
-  _HomeState() {
-    _searchEdit.addListener(() {
-      if (_searchEdit.text.isEmpty) {
-        setState(() {
-          _isSearch = true;
-          _searchText = "";
-        });
-      } else {
-        setState(() {
-          _isSearch = false;
-          _searchText = _searchEdit.text;
-        });
-      }
-    });
-  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         title: appTitle,
         home: Scaffold(
-          appBar: AppBar(
-            title: Text(appTitle),
-            actions: <Widget>[
-              IconButton(icon: Icon(Icons.exit_to_app), onPressed: ()  {
-                showLogoutDialog(context);
-
-              }),
-
-            ],
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(25),
-            child: Column(
-              children: [
-                Row(
-                  children: <Widget>[
-                    Flexible(child: _searchBox()),
-                    GestureDetector(
-                      onTap: (){
-                        if(sortFlag==false){
-                          sortFlag=true;
-
-                            _items.sort((a, b) => a.toString().compareTo(b.toString()));
-                          setState(() {
-
-                          });
-
-                        }else{
-                          sortFlag=false;
-                          _items.sort((a, b) => b.toString().compareTo(a.toString()));
-                          setState(() {
-
-                          });
-                        }
-
-
-                      },
-                      child: Image(
-                        image: AssetImage("assets/ic_sort.png"),
-                        width: 30,
-                        height: 30,
-
-                      ),
-                    ),
-                  ],
-                ),
+            appBar: AppBar(
+              title: Text(appTitle),
+            ),
+            body: Padding(
+                padding: const EdgeInsets.all(25),
                 // Display the data loaded from sample.json
-               _items!=null? _isSearch ?Expanded(
-                        child: ListView.builder(
-                          itemCount: _items.length,
+                child: _items != null
+                    ? /*NotificationListener<ScrollNotification>(
+                        // ignore: missing_return
+                        onNotification: (
+                          ScrollNotification scrollInfo) {
+                          if (scrollInfo.metrics.pixels ==
+                              scrollInfo.metrics.maxScrollExtent) {
+                            loadMore();
+                          }
+                        },
+                        child: AlphabetListScrollView(
+                          strList: strList,
+                          highlightTextStyle: TextStyle(
+                            color: Colors.yellow,
+                          ),
+                          showPreview: true,
                           itemBuilder: (context, index) {
-                            return _showUserListItem(index);
+                            return (index == strList.length)
+                                ? Container(
+                                    color: Colors.greenAccent,
+                                    // ignore: deprecated_member_use
+                                    child: FlatButton(
+                                      child: Text("Load More"),
+                                      onPressed: () {
+                                        loadMore();
+                                      },
+                                    ),
+                                  )
+                                : _list(index);
                           },
-                        ),
-                      ): _searchListView():Container()
-
-              ],
-            ),
-          ),
-          drawer: Drawer(
-            // Add a ListView to the drawer. This ensures the user can scroll
-            // through the options in the drawer if there isn't enough vertical
-            // space to fit everything.
-
-            child: ListView(
-              // Important: Remove any padding from the ListView.
-              padding: EdgeInsets.zero,
-              children: <Widget>[
-                DrawerHeader(
-                  child: Text('Drawer Header'),
-                  decoration: BoxDecoration(
-                    color: Colors.blue,
+                          indexedHeight: (i) {
+                            return 70;
+                          },
+                        ))*/
+                AlphabetListScrollView(
+                  strList: strList,
+                  highlightTextStyle: TextStyle(
+                    color: Colors.yellow,
                   ),
-                ),
-                ListTile(
-                  title: Text('Item 1'),
-                  onTap: () {
-                    // Update the state of the app
-                    // ...
-                    // Then close the drawer
-                    Navigator.pop(context);
+                  showPreview: true,
+                  itemBuilder: (context, index) {
+                    return _list(index);
                   },
-                ),
-                ListTile(
-                  title: Text('Item 2'),
-                  onTap: () {
-                    // Update the state of the app
-                    // ...
-                    // Then close the drawer
-                    Navigator.pop(context);
+                  indexedHeight: (i) {
+                    return 70;
                   },
-                ),
-              ],
-            ),
-          ),
-        ));
+                ): Center(child: CircularProgressIndicator()))));
   }
-  Widget _showUserListItem(index){
-    return Container(
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.black87, width: 1.0)),
-      margin: EdgeInsets.all(10),
-      padding: EdgeInsets.all(10),
-      child: Container(
-        child: Row(
-          children: <Widget>[
-            showImageView(_items[index]["profile_pic"]),
-            SizedBox(
-              width: 20,
-            ),
-            Column(
-              mainAxisAlignment:
-              MainAxisAlignment.start,
-              crossAxisAlignment:
-              CrossAxisAlignment.start,
-              children: <Widget>[
-               _isSearch? Text("Name: " + _items[index]["username"]):Text("Name: " + _searchListItems[index]),
-                Text(
-                  "Email: " + _items[index]["email"]),
-                Text("City: " + _items[index]["city"]),
-                Text( _items[index]["contact_numbers"][0]["contact_type"]+": "+_items[index]["contact_numbers"][0]["contact_no"]),
-                visitedButNotInFav(index),
-                //getTextWidgets(_items)
-              ],
-            )
-          ],
-        ),
-        //leading: Image.memory(_items[index]("profile_pic]")),
-        // child: Text(_items[index]["username"]),
-        //  subtitle: Text(_items[index]["email"]),
-      ),
-    );
-  }
-  Widget _searchBox() {
-    return Container(
-      decoration: BoxDecoration(border: Border.all(width: 1.0),borderRadius:BorderRadius.all(
-        Radius.circular(15.0)), ),
-      child:  new TextField(
-          controller: _searchEdit,
-          decoration: InputDecoration(
-            hintText: "Search",
-            hintStyle: new TextStyle(color: Colors.grey[300]),
-          ),
-          textAlign: TextAlign.center,
+// code for load 50 record at a time
+ /* loadMore() {
+    if(strList.length<_items.length-50){
+      for (int i = 0; i < _pageSize + 50; i++) {
+        strList.add(_items[i].firstName);
+      }
+      _items.sort((a, b) =>
+        a.firstName.toLowerCase().compareTo(b.firstName.toLowerCase()));
+    }else{
+      Toast.show("No more items to load",context);
+    }
+  }*/
 
-        ),
-
-    );
-  }
-  showImageView(_base64){
-    Uint8List bytes = base64.decode(_base64.toString().replaceAll("data:image/png;base64,", ""));
-   return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(
-          Radius.circular(30.0)),
-        color: Colors.transparent,
-      ),
-      child:Image.memory(bytes,width: 60,height: 60,)
-    );
-  }
-  showLogoutDialog(context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        // return object of type Dialog
-        return AlertDialog(
-          title: new Text("Logout"),
-          content: new Text('Are you sure you want to logout?'),
-          actions: <Widget>[
-            // usually buttons at the bottom of the dialog
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                FlatButton(
-                  child: new Text("Cancel"),
-                  onPressed: () async {
-                    Navigator.of(context).pop();
-                  },
-                ),
-                Container(width: 64),
-                FlatButton(
-                  child: new Text("Logout"),
-                  onPressed: () async {
-                    SharedPreferences preferences =
-                    await SharedPreferences.getInstance();
-                    preferences.clear();
-                    Navigator.of(context).pushNamedAndRemoveUntil(
-                      '/login', (Route<dynamic> route) => false);
-                  },
-                ),
-              ],
-            ),
-          ],
+  Widget _list(index) {
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+              builder: (context) => EmpDetails(
+                    id: _items[index].id,
+                    fName: _items[index].firstName,
+                    lName: _items[index].lastName,
+                    email: _items[index].email,
+                    contactNumber: _items[index].contactNumber,
+                    age: _items[index].age.toString(),
+                    salary: _items[index].salary.toString(),
+                    address: _items[index].address,
+                  )),
         );
       },
+      child: ListTile(
+        leading: Container(
+          padding: EdgeInsets.all(15),
+          margin: EdgeInsets.only(right: 10),
+          decoration: BoxDecoration(
+              color: Colors.grey[400],
+              borderRadius: BorderRadius.all(Radius.circular(30))),
+          child: Text(
+            _items[index].firstName[0] + _items[index].lastName[0],
+            style: TextStyle(color: Colors.white, fontSize: 13),
+          ),
+        ),
+
+        /* CircleAvatar(
+          radius: 30.0,
+          backgroundImage:
+          NetworkImage(_items[index].imageUrl),
+          backgroundColor: Colors.blueGrey,
+        ),*/
+        title: Text(_items[index].firstName),
+        subtitle: Text(_items[index].lastName),
+      ),
     );
   }
-  visitedButNotInFav(index){
-
-    favourate(index);
-
-    List visit=new List();
-    var strList="";
-    visit.add(_items[index]["visited_products"]);
-    print(visit);
-    for (int j = 0; j < _items[index]["visited_products"].length; j++) {
-      if(!favList.contains(_items[index]["visited_products"][j]["product_id"])){
-        print(_items[index]["visited_products"][j]["product_id"]);
-       if(j==_items[index]["visited_products"].length-1){
-         strList+=_items[index]["visited_products"][j]["product_id"];
-       } else{
-         strList+=_items[index]["visited_products"][j]["product_id"]+",";
-       }
-      }
-
-
-    }
-    return Text("Product he may Like: "+strList);
-
-
-  }
-
-  favourate(index){
-    favList=new List();
-    var strList="";
-    //print(favList);
-    for (int j = 0; j < _items[index]["favourite_products"].length; j++) {
-
-
-
-      favList.add(_items[index]["favourite_products"][j]["product_id"]);
-      print(_items[index]["favourite_products"][j]["product_id"]);
-
-      strList+=_items[index]["favourite_products"][j]["product_id"]+",";
-
-    }
-    return Text(strList);
-
-  }
-  Widget _searchListView() {
-    _searchListItems = new List<String>();
-    for (int i = 0; i < _items.length; i++) {
-      var item = _items[i]["username"];
-
-
-
-      if (item.toLowerCase().contains(_searchText.toLowerCase())) {
-        _searchListItems.add(item);
-      }
-    }
-    return _searchAddList();
-  }
-  Widget _searchAddList() {
-    setState(() {
-
-    });
-    return new Flexible(
-      child: new ListView.builder(
-        itemCount: _searchListItems.length,
-        itemBuilder: (BuildContext context, int index) {
-          return _showUserListItem(index); /*new Card(
-            color: Colors.cyan[100],
-            elevation: 5.0,
-            child: new Container(
-              margin: EdgeInsets.all(15.0),
-              child: Column(
-                children: <Widget>[
-                  new Text("${_searchListItems[index]}"),
-
-                ],
-              ),
-            ),
-          );*/
-        }),
-    );
-  }
-
 }
-
-
-
-
-
